@@ -1,0 +1,19 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=MSLightBrowser
+Comment=Lightweight and fast web browser
+Comment[ru]=Ультралегкий и быстрый веб-браузер
+
+# Замените FULL_PATH_HERE на полный путь к папке проекта
+# Например: /home/username/MSLIghtBrowser
+Exec=FULL_PATH_HERE/launch.sh
+
+# Иконка (можно использовать встроенную или свою)
+Icon=web-browser
+
+Terminal=false
+Categories=Network;WebBrowser;Utility;
+Keywords=web;browser;internet;
+StartupNotify=true
+X-GNOME-Autostart-enabled=true
