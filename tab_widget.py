@@ -26,8 +26,8 @@ class BrowserTab(QWidget):
         layout.addWidget(self.web_view)
         self.setLayout(layout)
         
-        # Загружаем начальную страницу
-        self.web_view.setUrl(QUrl("https://example.com"))
+        # Загружаем начальную страницу (DuckDuckGo)
+        self.web_view.setUrl(QUrl("https://duckduckgo.com"))
     
     def load_url(self, url):
         """Загрузить URL"""
@@ -42,7 +42,7 @@ class BrowserTab(QWidget):
         self.web_view.back()
     
     def forward(self):
-        """Вперёд"""
+        """Вперед"""
         self.web_view.forward()
     
     def reload(self):
@@ -60,4 +60,5 @@ class BrowserTab(QWidget):
         if hasattr(self.parent(), 'setTabText'):
             index = self.parent().indexOf(self)
             if index >= 0:
-                self.parent().setTabText(index, title[:30] if title else "New Tab")
+                display_title = title[:30] if title else "New Tab"
+                self.parent().setTabText(index, display_title)

@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
     QMenu,
     QAction,
     QMessageBox,
+    QComboBox,
 )
 from PyQt5.QtGui import QIcon, QKeySequence
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile
@@ -29,6 +30,7 @@ class BrowserWindow(QMainWindow):
         self.privacy_manager = PrivacyManager()
         self.dark_mode = False
         self.ad_blocking_enabled = True
+        self.home_url = "https://duckduckgo.com"
         
         self.init_ui()
         self.apply_theme()
@@ -48,17 +50,13 @@ class BrowserWindow(QMainWindow):
         self.forward_btn = QPushButton("→")
         self.reload_btn = QPushButton("↻")
         self.home_btn = QPushButton("⌂")
-        self.address_bar = QLineEdit()
-        self.menu_btn = QPushButton("≡")
         
         self.back_btn.clicked.connect(self.go_back)
         self.forward_btn.clicked.connect(self.go_forward)
         self.reload_btn.clicked.connect(self.reload)
         self.home_btn.clicked.connect(self.go_home)
-        self.address_bar.returnPressed.connect(self.load_url)
-        self.menu_btn.clicked.connect(self.show_menu)
         
-        for btn in [self.back_btn, self.forward_btn, self.reload_btn, self.home_btn, self.menu_btn]:
+        for btn in [self.back_btn, self.forward_btn, self.reload_btn, self.home_btn]:
             btn.setMaximumWidth(40)
             btn.setMinimumHeight(30)
         
@@ -66,7 +64,27 @@ class BrowserWindow(QMainWindow):
         nav_layout.addWidget(self.forward_btn)
         nav_layout.addWidget(self.reload_btn)
         nav_layout.addWidget(self.home_btn)
+        
+        # Комбо-бокс для выбора поисковика
+        self.search_engine_combo = QComboBox()
+        self.search_engine_combo.addItem("DuckDuckGo", "https://duckduckgo.com/?q=")
+        self.search_engine_combo.addItem("Google", "https://www.google.com/search?q=")
+        self.search_engine_combo.addItem("Yandex", "https://yandex.ru/search/?text=")
+        self.search_engine_combo.addItem("Bing", "https://www.bing.com/search?q=")
+        self.search_engine_combo.setMaximumWidth(100)
+        nav_layout.addWidget(self.search_engine_combo)
+        
+        # Адресная строка / поисковая строка
+        self.address_bar = QLineEdit()
+        self.address_bar.setPlaceholderText("Search or enter URL...")
+        self.address_bar.returnPressed.connect(self.load_url)
         nav_layout.addWidget(self.address_bar)
+        
+        # Кнопка меню
+        self.menu_btn = QPushButton("≡")
+        self.menu_btn.clicked.connect(self.show_menu)
+        self.menu_btn.setMaximumWidth(40)
+        self.menu_btn.setMinimumHeight(30)
         nav_layout.addWidget(self.menu_btn)
         
         # Вкладки
@@ -141,14 +159,40 @@ class BrowserWindow(QMainWindow):
             self.address_bar.setText(str(url))
     
     def load_url(self):
-        """Загрузить URL из адресной строки"""
+        """Загрузить URL или выполнить поиск"""
         current_tab = self.tab_widget.currentWidget()
         if current_tab:
-            url = self.address_bar.text().strip()
-            if url:
-                if "://" not in url:
-                    url = "https://" + url
-                current_tab.load_url(QUrl(url))
+            query = self.address_bar.text().strip()
+            if not query:
+                return
+            
+            # Проверяем, это URL или поисковый запрос
+            if self.is_url(query):
+                # Это URL
+                if "://" not in query:
+                    url = "https://" + query
+                else:
+                    url = query
+            else:
+                # Это поисковый запрос
+                search_engine_url = self.search_engine_combo.currentData()
+                # Кодируем пробелы и спецсимволы
+                query_encoded = query.replace(" ", "+")
+                url = search_engine_url + query_encoded
+            
+            current_tab.load_url(QUrl(url))
+    
+    def is_url(self, text):
+        """Проверить, является ли текст URL"""
+        # Простая эвристика
+        url_indicators = [
+            "://",
+            ".",
+            "localhost",
+            "http",
+            "ftp",
+        ]
+        return any(indicator in text for indicator in url_indicators)
     
     def go_back(self):
         """Назад"""
@@ -157,7 +201,7 @@ class BrowserWindow(QMainWindow):
             current_tab.back()
     
     def go_forward(self):
-        """Вперёд"""
+        """Вперед"""
         current_tab = self.tab_widget.currentWidget()
         if current_tab:
             current_tab.forward()
@@ -169,10 +213,10 @@ class BrowserWindow(QMainWindow):
             current_tab.reload()
     
     def go_home(self):
-        """На домашнюю страницу"""
+        """На домашнюю страницу (DuckDuckGo)"""
         current_tab = self.tab_widget.currentWidget()
         if current_tab:
-            current_tab.load_url(QUrl("https://example.com"))
+            current_tab.load_url(QUrl(self.home_url))
     
     def show_menu(self):
         """Показать главное меню"""
@@ -250,6 +294,8 @@ class BrowserWindow(QMainWindow):
             "• Dark theme\n"
             "• Ad blocking\n"
             "• Privacy controls\n"
+            "• Search via DuckDuckGo, Google, Yandex, Bing\n"
             "• TLS 1.3 support\n\n"
-            "License: MIT"
+            "License: MIT\n\n"
+            "Home: https://duckduckgo.com"
         )
